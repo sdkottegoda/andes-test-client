@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Andes Test Client Results Page</title>
+<script type="text/javascript"
+  src="dygraph-combined-dev.js"></script>
+</head>
+<body>
+  <h1>Andes Test Client Results Page</h1>
+
+  <p><b>Notes</b></p>
+  <p>The charts are interactive: you can, </p>
+    <ul>  
+     <li>mouse over to highlight individual values</li>
+     <li>click and drag to zoom</li>
+     <li>double-click to zoom out</li>
+     <li>shift-drag to pan</li>
+     <li>change the number and hit enter to adjust the averaging period</li>
+    </ul>
+
+  <h2>Message Publish Rate </h2>
+
+  <p>Graph shows messages published at each time interval for a given JMS consumer.</p>
+  <p>Select file to show graph <input type="file" id="publish-rate" name="open csv" accept=".sent-stats.csv" /></p>
+  <output id="publish_list"></output>
+  <div id="graph-publish"
+       style="width:1000px; height:500px;"></div>
+
+  <script>
+    function handleFileSelect(evt) {
+      var files = evt.target.files; // FileList object
+
+      // files is a FileList of File objects. List some properties.
+      var output = [];
+      for (var i = 0, f; f = files[i]; i++) {
+        output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                    f.size, ' bytes, last modified: ',
+                    f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                    '</li>');
+      }
+      document.getElementById('publish_list').innerHTML = '<ul>' + output.join('') + '</ul>';
+
+      g3 = new Dygraph(
+      document.getElementById("graph-publish"), files[0].name,
+      {
+        showRoller: true
+      }
+    );
+    }
+
+    document.getElementById('publish-rate').addEventListener('change', handleFileSelect, false);
+  </script>
+
+  <h2>Message Receiving Rate</h2>
+
+  <p>Graph shows messages received at each time interval for a given JMS consumer. Relevant stats for a test run is stored at "&lt;CLIENT_DIR&gt;/logs/metrics" directory</p>
+  <p>Select file to show graph <input type="file" id="receive-stats" name="open csv" accept=".receiving-stats.csv" /></p>
+  <output id="recieve-list"></output>
+
+  <div id="graph-receive-stats"
+    style="width:1000px; height:500px;"></div>
+
+  <script>
+    function handleFileSelect(evt) {
+      var files = evt.target.files; // FileList object
+
+      // files is a FileList of File objects. List some properties.
+      var output = [];
+      for (var i = 0, f; f = files[i]; i++) {
+        output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                    f.size, ' bytes, last modified: ',
+                    f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                    '</li>');
+      }
+      document.getElementById('recieve-list').innerHTML = '<ul>' + output.join('') + '</ul>';
+
+      g3 = new Dygraph(
+      document.getElementById("graph-receive-stats"), files[0].name,
+      {
+        showRoller: true
+      }
+    );
+    }
+
+    document.getElementById('receive-stats').addEventListener('change', handleFileSelect, false);
+  </script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+#
+# Copyright 2015 Asitha Nanayakkara
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Configuration file for Andes Test Client
+
+# Global Configurations
+# ---------------------
+#
+# This configurations apply to all the publishers and subscribers. This configuration
+# values can be overridden by adding different values for the same parameters within the
+# respective publisher and subscriber sections
+#
+
+hostname: localhost
+port: 5672
+username: admin
+password: admin
+
+initial_context_factory: org.wso2.andes.jndi.PropertiesFileInitialContextFactory
+connection_factory_name_prefix: connectionfactory
+connection_factory_name: andesConnectionfactory
+
+client_id: carbon
+virtualhost_name: carbon
+print_per_messages: 1000
+
+console_report_enable: true
+console_report_update_interval_seconds: 60
+
+jmx_report_enable: false
+
+csv_report_enable: true
+csv_report_update_interval_seconds: 30
+
+csv_gauges_update_interval_milis: 1000
+
+# End of Global Configurations
+
+# Publisher Configurations
+# ------------------------
+#
+#topic_publishers:
+#  - message_count: 200
+#    parallel_threads: 1
+#    queue_name: games.football.sriLanka
+#    queue_name: games
+
+#
+queue_publishers:
+    - queue_name: mbQ
+      message_count: 1000
+  #    failover_params: failover='roundrobin'&brokerlist='tcp://10.100.5.94:5672?connectdelay='1000'&connecttimeout='3000'&retries='1';tcp://10.100.5.94:5673?connectdelay='1000'&connecttimeout='3000'&retries='1''
+      parallel_threads: 1
+
+#    - queue_name: myQueue1
+#      message_count: 5000
+#      port: 5673
+#      parallel_threads: 1
+
+#    - queue_name: perf2
+#      message_count: 100000
+#      parallel_threads: 2
+
+# End of publisher Configurations
+
+# Subscriber configurations
+# -------------------------
+#
+#topic_subscribers:
+#  - parallel_threads: 1
+#    queue_name: c::a::b
+#    message_count: 10
+#
+queue_subscribers:
+    - queue_name: mbQ
+      message_count: 1000
+    #  failover_params: failover='roundrobin'&brokerlist='tcp://10.100.5.94:5672?connectdelay='1000'&connecttimeout='3000'&retries='1';tcp://10.100.5.94:5673?connectdelay='1000'&connecttimeout='3000'&retries='1''
+      parallel_threads: 1
+
+#   - queue_name: myQueue1
+#     message_count: 10000
+#     parallel_threads: 1
+#
+#   - queue_name: perf2
+#     message_count: 200000
+#     parallel_threads: 1
+#
+#durable_subscribers:
+#   - queue_name: a.b.c.d
+#     message_count: 1000
+#     sub_id: new_sub
+
+# End of subscriber configurations
