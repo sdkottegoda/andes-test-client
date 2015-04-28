@@ -88,7 +88,7 @@ queue_subscribers:
     - queue_name: mbQ
       message_count: 1000
     #  failover_params: failover='roundrobin'&brokerlist='tcp://10.100.5.94:5672?connectdelay='1000'&connecttimeout='3000'&retries='1';tcp://10.100.5.94:5673?connectdelay='1000'&connecttimeout='3000'&retries='1''
-      parallel_threads: 1
+      parallel_threads: 2
 
 #   - queue_name: myQueue1
 #     message_count: 10000

@@ -49,4 +49,9 @@ public class SubscriberConfig extends PubSubConfig {
     public String getSubscriptionID() {
         return subscriptionID;
     }
+
+
+    public SubscriberConfig clone() {
+        return new SubscriberConfig(this);
+    }
 }

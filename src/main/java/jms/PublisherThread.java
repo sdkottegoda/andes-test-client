@@ -40,7 +40,7 @@ public class PublisherThread implements Runnable {
         jmsPublisher = publisher;
         sentCount = new AtomicInteger(0);
         publishRate = Main.metrics.meter(name(
-                PublisherThread.class, "publisher", publisher.getConfigs().getId(), "meter")
+                        PublisherThread.class, "publisher", publisher.getConfigs().getId(), "meter")
         );
 
         // Per given period how many messages were sent is taken through this gauge
@@ -48,18 +48,19 @@ public class PublisherThread implements Runnable {
                 name(PublisherThread.class, jmsPublisher.getConfigs().getId(), "sent-stats"),
                 new Gauge<Integer>() {
 
-            /**
-             * number of messages sent since last call to this method is returned
-             * @return Integer
-             */
-            @Override
-            public Integer getValue() {
-                int val = sentCount.get();
-                sentCount.addAndGet(-val);
-                return val;
-            }
-        });
+                    /**
+                     * number of messages sent since last call to this method is returned
+                     * @return Integer
+                     */
+                    @Override
+                    public Integer getValue() {
+                        int val = sentCount.get();
+                        sentCount.addAndGet(-val);
+                        return val;
+                    }
+                });
     }
+
     @Override
     public void run() {
         long messageCount = jmsPublisher.getConfigs().getMessageCount();
@@ -74,7 +75,7 @@ public class PublisherThread implements Runnable {
                 message = jmsPublisher.createTextMessage(i + " Publisher: " + publisherID);
                 jmsPublisher.send(message);
 
-                if(log.isTraceEnabled()) {
+                if (log.isTraceEnabled()) {
                     log.trace("message published: " + message);
                 }
                 sentCount.incrementAndGet();

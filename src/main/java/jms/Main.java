@@ -18,7 +18,9 @@ package jms;
 
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.CsvReporter;
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.JmxReporter;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
 import jms.config.ConfigReader;
@@ -49,6 +51,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
 public class Main {
 
     private static Log log = LogFactory.getLog(Main.class);
@@ -70,6 +74,13 @@ public class Main {
         CommandLineParser parser = new BasicParser();
         CommandLine cmd = parser.parse(options, args, false);
 
+        Histogram latencyHist = Main.metrics.histogram(
+                name(ConsumerThread.class, "global", "consumer", "latency")
+        );
+        Meter consumerRate = Main.metrics.meter(
+                name(ConsumerThread.class, "global", "consumer", "rate"));
+
+
         if (cmd.hasOption("c")) {
             CONFIG_FILE_PATH = cmd.getOptionValue("c");
         } else {
@@ -90,7 +101,7 @@ public class Main {
         for (SubscriberConfig subscriberConfig : config.getTopicSubscriberConfigList()) {
             topicSubscriber = new TestTopicSubscriber();
             topicSubscriber.subscribe(subscriberConfig);
-            Thread subThread = new Thread(new ConsumerThread(topicSubscriber));
+            Thread subThread = new Thread(new ConsumerThread(topicSubscriber, latencyHist, consumerRate));
             subThread.start();
             threadList.add(subThread);
         }
@@ -99,7 +110,7 @@ public class Main {
         for (SubscriberConfig subscriberConfig : config.getQueueSubscriberConfigList()) {
             queueReceiver = new TestQueueReceiver();
             queueReceiver.subscribe(subscriberConfig);
-            Thread subThread = new Thread(new ConsumerThread(queueReceiver));
+            Thread subThread = new Thread(new ConsumerThread(queueReceiver, latencyHist, consumerRate));
             subThread.start();
             threadList.add(subThread);
         }
@@ -108,7 +119,7 @@ public class Main {
         for (SubscriberConfig subscriberConfig : config.getDurableSubscriberConfigList()) {
             durableTopicSubscriber = new TestDurableTopicSubscriber();
             durableTopicSubscriber.subscribe(subscriberConfig);
-            Thread subThread = new Thread(new ConsumerThread(durableTopicSubscriber));
+            Thread subThread = new Thread(new ConsumerThread(durableTopicSubscriber, latencyHist, consumerRate));
             subThread.start();
             threadList.add(subThread);
         }

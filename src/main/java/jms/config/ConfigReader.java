@@ -156,7 +156,9 @@ public class ConfigReader {
                 subscriberConfigsList.add(subscriberConfig);
 
                 for (int i = 1; i < subscriberConfig.getParallelPublishers(); i++) {
-                    subscriberConfigsList.add(subscriberConfig);
+                    SubscriberConfig clone = subscriberConfig.clone();
+                    clone.setSubscriptionID(subscriberConfig.getSubscriptionID() + i);
+                    subscriberConfigsList.add(clone);
                 }
             }
         } else {

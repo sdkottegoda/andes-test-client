@@ -37,14 +37,17 @@ public class ConsumerThread implements Runnable {
     private final Meter consumerRate;
     private final AtomicInteger receivedCount;
 
-    public ConsumerThread(SimpleJMSConsumer consumer) {
+    private final Histogram globalLatencyHist;
+    private final Meter globalConsumerRate;
+
+    public ConsumerThread(SimpleJMSConsumer consumer, Histogram globalLatency, Meter globalConsumerRate) {
         jmsConsumer = consumer;
         receivedCount = new AtomicInteger(0);
         latencyHist = Main.metrics.histogram(
                 name(ConsumerThread.class, "consumer", jmsConsumer.getConfigs().getId(), "latency")
         );
         consumerRate = Main.metrics.meter(
-                name(ConsumerThread.class, "consumer", jmsConsumer.getConfigs().getId(), "meter"));
+                name(ConsumerThread.class, "consumer", jmsConsumer.getConfigs().getId(), "rate"));
 
         // Per given period how many messages were sent is taken through this gauge
         Main.gauges.register(
@@ -58,6 +61,9 @@ public class ConsumerThread implements Runnable {
                 return val;
             }
         });
+
+        this.globalConsumerRate = globalConsumerRate;
+        this.globalLatencyHist = globalLatency;
     }
 
 
@@ -78,8 +84,11 @@ public class ConsumerThread implements Runnable {
 
                 latency = System.currentTimeMillis() - message.getJMSTimestamp();
                 latencyHist.update(latency);
+                globalLatencyHist.update(latency);
                 receivedCount.incrementAndGet();
+
                 consumerRate.mark();
+                globalConsumerRate.mark();
                 if(log.isTraceEnabled()) {
                     log.trace("message received: " + message);
                 }
