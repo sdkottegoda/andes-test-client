@@ -45,6 +45,16 @@ public class TestTopicPublisher implements SimpleJMSPublisher {
     }
 
     @Override
+    public void commit() throws JMSException{
+        topicSession.commit();
+    }
+
+    @Override
+    public void rollback() throws JMSException {
+        topicSession.rollback();
+    }
+
+    @Override
     public void init(PublisherConfig conf) throws NamingException, JMSException {
 
         this.conf = conf;
@@ -59,7 +69,11 @@ public class TestTopicPublisher implements SimpleJMSPublisher {
         TopicConnectionFactory connFactory = (TopicConnectionFactory) ctx.lookup(conf.getConnectionFactoryName());
         topicConnection = connFactory.createTopicConnection();
         topicConnection.start();
-        topicSession = topicConnection.createTopicSession(false, QueueSession.AUTO_ACKNOWLEDGE);
+        if(conf.isTransactional()) {
+            topicSession = topicConnection.createTopicSession(true, 0);
+        } else {
+            topicSession = topicConnection.createTopicSession(false, QueueSession.AUTO_ACKNOWLEDGE);
+        }
 //        Queue queue = (Queue)ctx.lookup(queueName);
         Topic topic = topicSession.createTopic(conf.getQueueName());
         // create the message to send

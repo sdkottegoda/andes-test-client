@@ -18,40 +18,29 @@ package jms.config;
 
 public class SubscriberConfig extends PubSubConfig {
     
-    private String queueName;
-    private long messageCount;
     private String subscriptionID;
     
     public SubscriberConfig(GlobalConfig globalConfig) {
         super(globalConfig);
     }
 
-    void setQueueName(String queueName) {
-        this.queueName = queueName;
-    }
-
-    void setMessageCount(long messageCount) {
-        this.messageCount = messageCount;
-    }
-
     void setSubscriptionID(String subscriptionID) {
         this.subscriptionID = subscriptionID;
-    }
-
-    public long getMessageCount() {
-        return messageCount;
-    }
-
-    public String getQueueName() {
-        return queueName;
     }
 
     public String getSubscriptionID() {
         return subscriptionID;
     }
 
-
-    public SubscriberConfig clone() {
+    @Override
+    public SubscriberConfig clone() throws CloneNotSupportedException {
+        super.clone();
         return new SubscriberConfig(this);
+    }
+
+    public SubscriberConfig newSubscriberConfig(String id) {
+        SubscriberConfig s = new SubscriberConfig(this);
+        s.setId(id);
+        return s;
     }
 }

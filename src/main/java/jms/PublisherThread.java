@@ -24,6 +24,8 @@ import org.apache.commons.logging.LogFactory;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -63,6 +65,14 @@ public class PublisherThread implements Runnable {
 
     @Override
     public void run() {
+        if(jmsPublisher.getConfigs().isTransactional()) {
+            transactionalPublish();
+        } else {
+            publish();
+        }
+    }
+
+    private void publish() {
         long messageCount = jmsPublisher.getConfigs().getMessageCount();
         String publisherID = jmsPublisher.getConfigs().getId();
 
@@ -73,6 +83,7 @@ public class PublisherThread implements Runnable {
             for (int i = 1; i <= messageCount; i++) {
 
                 message = jmsPublisher.createTextMessage(i + " Publisher: " + publisherID);
+                message.setJMSMessageID(Integer.toString(i));
                 jmsPublisher.send(message);
 
                 if (log.isTraceEnabled()) {
@@ -80,6 +91,7 @@ public class PublisherThread implements Runnable {
                 }
                 sentCount.incrementAndGet();
                 publishRate.mark();
+
             }
 
             log.info("Stopping publisher. [ Publisher ID: " + jmsPublisher.getConfigs().getId() + "  ]");
@@ -91,5 +103,69 @@ public class PublisherThread implements Runnable {
         }
 
         log.info("Stopped publisher. [ Publisher ID: " + jmsPublisher.getConfigs().getId() + "  ]");
+    }
+
+    private void transactionalPublish() {
+        long messageCount = jmsPublisher.getConfigs().getMessageCount();
+        String publisherID = jmsPublisher.getConfigs().getId();
+
+        log.info("Starting transactional publisher to send " + messageCount + " messages. Publisher ID: " + publisherID);
+        Message message = null;
+        int batchSize = jmsPublisher.getConfigs().getTransactionBatchSize();
+        List<Message> currentBatch = new ArrayList<Message>(batchSize);
+
+        for (int i = 1; i <= messageCount; i++) {
+            try {
+                message = jmsPublisher.createTextMessage(i + " Publisher: " + publisherID);
+                message.setJMSMessageID(Integer.toString(i));
+                jmsPublisher.send(message);
+                currentBatch.add(message);
+
+                if (log.isTraceEnabled()) {
+                    log.trace("message enqueued for transaction: " + message);
+                }
+
+                if ((currentBatch.size() == batchSize) || (i == messageCount)) {
+
+                    jmsPublisher.commit();
+                    sentCount.addAndGet(currentBatch.size());
+                    publishRate.mark(currentBatch.size());
+                    currentBatch.clear();
+                }
+            } catch (JMSException e) {
+                log.error("Exception occurred while transactional publishing", e);
+                resend(currentBatch);
+            }
+        }
+
+        log.info("Stopping transactional publisher. [ Publisher ID: " + jmsPublisher.getConfigs().getId() + "  ]");
+        try {
+            jmsPublisher.close();
+        } catch (JMSException e) {
+            log.error("Exception occurred while closing transactional publisher " + publisherID, e);
+        }
+
+        log.info("Stopped publisher. [ Publisher ID: " + jmsPublisher.getConfigs().getId() + "  ]");
+    }
+
+    private void resend(List<Message> currentBatch) {
+        try {
+            jmsPublisher.rollback();
+            for (Message message : currentBatch) {
+                jmsPublisher.send(message);
+            }
+            jmsPublisher.commit();
+            sentCount.addAndGet(currentBatch.size());
+            publishRate.mark(currentBatch.size());
+            currentBatch.clear();
+        } catch (JMSException e) {
+            try {
+                jmsPublisher.rollback();
+                resend(currentBatch);
+            } catch (JMSException e1) {
+                log.error("Roll back failed on resend", e);
+                resend(currentBatch);
+            }
+        }
     }
 }

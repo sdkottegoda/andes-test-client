@@ -46,7 +46,6 @@ public class GlobalConfig {
     private String connectionFactoryName;
     private String clientID;
     private String virtualHostName;
-    private String failoverParams;
     private int printPerMessages;
     private boolean enableConsoleReport;
     private boolean jmxReportEnable;
@@ -211,28 +210,7 @@ public class GlobalConfig {
         }
     }
 
-    public String getFailoverParams() {
-        return failoverParams;
-    }
 
-    public void setFailoverParams(Object failoverParams) {
-        this.failoverParams = failoverParams.toString();
-    }
-
-    public String getTCPConnectionURL() {
-        // amqp://{username}:{password}@carbon/carbon?brokerlist='tcp://{hostname}:{port}'
-        StringBuilder builder = new StringBuilder();
-        builder.append("amqp://").append(getUsername()).append(":").append(getPassword()).append("@").
-                append(getClientID()).append("/").append(getVirtualHostName()).append("?");
-
-        if(StringUtils.isEmpty(getFailoverParams())) {
-            builder.append("brokerlist='tcp://").append(getHostname()).append(":").append(getPort()).append("'");
-        } else {
-            builder.append(getFailoverParams());
-        }
-
-        return builder.toString();
-    }
 
     public boolean isEnableConsoleReport() {
         return enableConsoleReport;

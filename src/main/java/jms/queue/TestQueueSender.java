@@ -18,6 +18,9 @@ package jms.queue;
 
 import jms.SimpleJMSPublisher;
 import jms.config.PublisherConfig;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.wso2.andes.client.failover.FailoverException;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -29,10 +32,12 @@ import javax.jms.QueueSession;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import java.util.List;
 import java.util.Properties;
 
 public class TestQueueSender implements SimpleJMSPublisher {
 
+    private static Log log = LogFactory.getLog(TestQueueReceiver.class);
     private QueueConnection queueConnection;
     private QueueSession queueSession;
     private QueueSender queueSender;
@@ -49,8 +54,11 @@ public class TestQueueSender implements SimpleJMSPublisher {
         QueueConnectionFactory connFactory = (QueueConnectionFactory) ctx.lookup(conf.getConnectionFactoryName());
         queueConnection = connFactory.createQueueConnection();
         queueConnection.start();
-        queueSession = queueConnection.createQueueSession(false, QueueSession.AUTO_ACKNOWLEDGE);
-        // Send message
+        if(conf.isTransactional()){
+            queueSession = queueConnection.createQueueSession(true, 0);
+        } else {
+            queueSession = queueConnection.createQueueSession(false, QueueSession.AUTO_ACKNOWLEDGE);
+        }
 //        Queue queue = (Queue)ctx.lookup(queueName);
         Queue queue = queueSession.createQueue(queueName);
         queueSender = queueSession.createSender(queue);
@@ -66,6 +74,16 @@ public class TestQueueSender implements SimpleJMSPublisher {
     @Override
     public void send(Message message) throws JMSException {
         queueSender.send(message);
+    }
+
+    @Override
+    public void commit() throws JMSException {
+        queueSession.commit();
+    }
+
+    @Override
+    public void rollback() throws JMSException {
+        queueSession.rollback();
     }
 
     @Override

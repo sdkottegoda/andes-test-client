@@ -67,7 +67,8 @@ public class Main {
     private static CsvReporter csvGaugeReporter;
     private static Slf4jReporter slf4jReporter;
 
-    public static void main(String[] args) throws NamingException, JMSException, FileNotFoundException, InterruptedException, ParseException {
+    public static void main(String[] args) throws NamingException, JMSException, FileNotFoundException,
+            InterruptedException, ParseException, CloneNotSupportedException {
 
         Options options = createOptions();
 
@@ -230,12 +231,3 @@ public class Main {
         csvReporter.start(csvReportRefreshRate, TimeUnit.SECONDS);
     }
 }
-
-
-
-
-
-
-
-
-

@@ -42,6 +42,9 @@ public class ConfigReader {
     public static final String CLIENT_ID = "client_id";
     public static final String VIRTUALHOST_NAME = "virtualhost_name";
 
+    public static final String TRANSACTIONAL_CLIENT = "transaction_enable";
+    public static final String TRANSACTION_BATCH_SIZE = "transaction_batch_size";
+
     public static final String TOPIC_PUBLISHERS = "topic_publishers";
     public static final String MESSAGE_COUNT = "message_count";
     public static final String PARALLEL_THREADS = "parallel_threads";
@@ -74,7 +77,7 @@ public class ConfigReader {
 
     public static final String CSV_GAUGE_UPDATE_INTERVAL = "csv_gauges_update_interval_milis";
 
-    public static TestConfiguration parseConfig(final String filePath) throws FileNotFoundException {
+    public static TestConfiguration parseConfig(final String filePath) throws FileNotFoundException, CloneNotSupportedException {
 
         InputStream input = new FileInputStream(new File(filePath));
         Yaml yaml = new Yaml();
@@ -127,7 +130,7 @@ public class ConfigReader {
         return testConfiguration;
     }
     
-    private static List<SubscriberConfig> populateSubscriberConfigs(Object section, GlobalConfig globalConfig) {
+    private static List<SubscriberConfig> populateSubscriberConfigs(Object section, GlobalConfig globalConfig) throws CloneNotSupportedException {
 
         List<SubscriberConfig> subscriberConfigsList;
         if (null != section) {
@@ -138,7 +141,7 @@ public class ConfigReader {
                 SubscriberConfig subscriberConfig = new SubscriberConfig(globalConfig);
 
                 updateGlobalConfigs(subscriberInfo, subscriberConfig);
-                updatePubSubConfigs(subscriberInfo, subscriberConfig);
+                populatePubSubConfigs(subscriberInfo, subscriberConfig);
                 
                 Object val = subscriberInfo.get(SUBSCRIPTION_ID);
                 if(null != val) {
@@ -156,9 +159,9 @@ public class ConfigReader {
                 subscriberConfigsList.add(subscriberConfig);
 
                 for (int i = 1; i < subscriberConfig.getParallelPublishers(); i++) {
-                    SubscriberConfig clone = subscriberConfig.clone();
-                    clone.setSubscriptionID(subscriberConfig.getSubscriptionID() + i);
-                    subscriberConfigsList.add(clone);
+                    SubscriberConfig s = subscriberConfig.newSubscriberConfig(
+                            subscriberConfig.getId() + "-" + Integer.toString(i));
+                    subscriberConfigsList.add(s);
                 }
             }
         } else {
@@ -177,11 +180,13 @@ public class ConfigReader {
                 PublisherConfig publisherConfig = new PublisherConfig(globalConfig);
 
                 updateGlobalConfigs(publisherInfo, publisherConfig);
-                updatePubSubConfigs(publisherInfo, publisherConfig);
+                populatePubSubConfigs(publisherInfo, publisherConfig);
                 publisherConfigList.add(publisherConfig);
 
                 for (int i = 1; i < publisherConfig.getParallelPublishers(); i++) {
-                    publisherConfigList.add(publisherConfig);
+                    PublisherConfig p = publisherConfig.newPublisherConfig(publisherConfig.getId() +
+                            "-" + Integer.toString(i));
+                    publisherConfigList.add(p);
                 }
             }
         } else {
@@ -191,7 +196,7 @@ public class ConfigReader {
         return publisherConfigList;
     }
 
-    private static void updatePubSubConfigs(Map yamlSection, PubSubConfig pubSubConfig) {
+    private static void populatePubSubConfigs(Map yamlSection, PubSubConfig pubSubConfig) {
 
         Object value = yamlSection.get(MESSAGE_COUNT);
 
@@ -227,6 +232,25 @@ public class ConfigReader {
             pubSubConfig.setId(value.toString());
         } else {
             pubSubConfig.setId(UUID.randomUUID().toString());
+        }
+
+        value = yamlSection.get(FAILOVER_PARAMS);
+        if (null != value) {
+            pubSubConfig.setFailoverParams(value.toString());
+        }
+
+        value = yamlSection.get(TRANSACTIONAL_CLIENT);
+        if(null != value) {
+            pubSubConfig.setTransactional((Boolean)value);
+        } else {
+            pubSubConfig.setTransactional(false);
+        }
+
+        value = yamlSection.get(TRANSACTION_BATCH_SIZE);
+        if(null != value) {
+            pubSubConfig.setTransactionBatchSize((Integer)value);
+        } else {
+            pubSubConfig.setTransactionBatchSize(1); // default
         }
     }
 
@@ -273,15 +297,10 @@ public class ConfigReader {
             config.setVirtualHostName(value);
         }
 
-        value = yamlSection.get(FAILOVER_PARAMS);
-        if (null != value) {
-            config.setFailoverParams(value);
-        }
-
         value = yamlSection.get(PRINT_PER_MESSAGES);
         if(null != value) {
             if( value instanceof Integer) {
-                config.setPrintPerMessages((Integer)value);
+                config.setPrintPerMessages(value);
             } else {
                 throw new IllegalArgumentException("Value for " + PRINT_PER_MESSAGES + " require type Integer. Found " +
                         " type " + value.getClass());
