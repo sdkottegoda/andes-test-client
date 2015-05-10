@@ -24,7 +24,7 @@
 # respective publisher and subscriber sections
 #
 
-hostname: localhost
+hostname: 192.168.1.33
 port: 5672
 username: admin
 password: admin
@@ -38,7 +38,7 @@ virtualhost_name: carbon
 print_per_messages: 1000
 
 console_report_enable: true
-console_report_update_interval_seconds: 60
+console_report_update_interval_seconds: 120
 
 jmx_report_enable: false
 
@@ -51,7 +51,8 @@ csv_gauges_update_interval_milis: 1000
 
 # Publisher Configurations
 # ------------------------
-#
+
+
 #topic_publishers:
 #  - message_count: 200
 #    parallel_threads: 1
@@ -61,9 +62,11 @@ csv_gauges_update_interval_milis: 1000
 #
 queue_publishers:
     - queue_name: mbQ
-      message_count: 1000
-  #    failover_params: failover='roundrobin'&brokerlist='tcp://10.100.5.94:5672?connectdelay='1000'&connecttimeout='3000'&retries='1';tcp://10.100.5.94:5673?connectdelay='1000'&connecttimeout='3000'&retries='1''
+      message_count: 1
+      failover_params: failover='roundrobin'&brokerlist='tcp://192.168.1.33:5672?connectdelay='1000'&connecttimeout='3000'&retries='1';tcp://192.168.1.33:5673?connectdelay='1000'&connecttimeout='3000'&retries='1''
       parallel_threads: 1
+      transaction_enable: false
+      transaction_batch_size: 100
 
 #    - queue_name: myQueue1
 #      message_count: 5000
@@ -78,23 +81,23 @@ queue_publishers:
 
 # Subscriber configurations
 # -------------------------
-#
+
 #topic_subscribers:
 #  - parallel_threads: 1
 #    queue_name: c::a::b
 #    message_count: 10
 #
-queue_subscribers:
-    - queue_name: mbQ
-      message_count: 1000
-    #  failover_params: failover='roundrobin'&brokerlist='tcp://10.100.5.94:5672?connectdelay='1000'&connecttimeout='3000'&retries='1';tcp://10.100.5.94:5673?connectdelay='1000'&connecttimeout='3000'&retries='1''
-      parallel_threads: 2
+#queue_subscribers:
+#    - queue_name: mbQ
+#      message_count: 1
+#    #  failover_params: failover='roundrobin'&brokerlist='tcp://10.100.5.94:5672?connectdelay='1000'&connecttimeout='3000'&retries='1';tcp://10.100.5.94:5673?connectdelay='1000'&connecttimeout='3000'&retries='1''
+#      parallel_threads: 2
 
 #   - queue_name: myQueue1
 #     message_count: 10000
 #     parallel_threads: 1
 #
-#   - queue_name: perf2
+:x#   - queue_name: perf2
 #     message_count: 200000
 #     parallel_threads: 1
 #

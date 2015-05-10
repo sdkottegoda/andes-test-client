@@ -18,31 +18,18 @@ package jms.config;
 
 public class PublisherConfig extends PubSubConfig {
 
-    private long messageCount;
-    private int parallelPublishers;
     private int publisherMaxThroughput;
     private String messageContent;
 
-    private String queueName;
     
     public PublisherConfig(GlobalConfig globalConfig) {
         super(globalConfig);
     }
 
-    public long getMessageCount() {
-        return messageCount;
-    }
-
-    public void setMessageCount(long messageCount) {
-        this.messageCount = messageCount;
-    }
-
-    public int getParallelPublishers() {
-        return parallelPublishers;
-    }
-
-    public void setParallelPublishers(int parallelPublishers) {
-        this.parallelPublishers = parallelPublishers;
+    public PublisherConfig(PublisherConfig config) {
+        super(config);
+        messageContent = config.getMessageContent();
+        publisherMaxThroughput = config.getPublisherMaxThroughput();
     }
 
     public int getPublisherMaxThroughput() {
@@ -61,14 +48,9 @@ public class PublisherConfig extends PubSubConfig {
         this.messageContent = messageContent;
     }
 
-    /**
-     * Topics this will be the topic name
-     */
-    public String getQueueName() {
-        return queueName;
-    }
-
-    public void setQueueName(String queueName) {
-        this.queueName = queueName;
+    public PublisherConfig newPublisherConfig(String id) {
+        PublisherConfig p = new PublisherConfig(this);
+        p.setId(id);
+        return p;
     }
 }

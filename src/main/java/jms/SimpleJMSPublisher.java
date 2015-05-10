@@ -26,6 +26,10 @@ public interface SimpleJMSPublisher {
 
     public void send(Message message) throws JMSException;
 
+    public void commit() throws JMSException;
+
+    public void rollback() throws JMSException;
+
     public void init(PublisherConfig conf) throws NamingException, JMSException;
 
     public Message createTextMessage(String text) throws JMSException;

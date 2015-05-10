@@ -16,12 +16,17 @@
 
 package jms.config;
 
+import org.apache.commons.lang3.StringUtils;
+
 public abstract class PubSubConfig extends GlobalConfig{
 
     private long messageCount;
     private int parallelPublishers;
     private String queueName;
     private String id;
+    private boolean isTransactional;
+    private int transactionBatchSize;
+    private String failoverParams;
 
     public PubSubConfig(GlobalConfig globalConfig) {
         super(globalConfig.getUsername(), globalConfig.getPassword(),
@@ -32,6 +37,25 @@ public abstract class PubSubConfig extends GlobalConfig{
                 globalConfig.isEnableConsoleReport(), globalConfig.getConsoleReportUpdateInterval(),
                 globalConfig.isJmxReportEnable(), globalConfig.isCsvReportEnable(),
                 globalConfig.getCsvUpdateInterval(), globalConfig.getCsvGaugeUpdateInterval());
+    }
+
+    public PubSubConfig(PubSubConfig config) {
+        super(config.getUsername(), config.getPassword(),
+                config.getHostname(), config.getPort(),
+                config.getInitialContextFactory(), config.getConnectionFactoryPrefix(),
+                config.getConnectionFactoryName(), config.getClientID(),
+                config.getVirtualHostName(), config.getPrintPerMessages(),
+                config.isEnableConsoleReport(), config.getConsoleReportUpdateInterval(),
+                config.isJmxReportEnable(), config.isCsvReportEnable(),
+                config.getCsvUpdateInterval(), config.getCsvGaugeUpdateInterval());
+
+        messageCount = config.getMessageCount();
+        parallelPublishers = config.getParallelPublishers();
+        queueName = config.getQueueName();
+        id = config.getId();
+        isTransactional = config.isTransactional();
+        transactionBatchSize = config.getTransactionBatchSize();
+        failoverParams = config.getFailoverParams();
     }
 
     void setMessageCount(long messageCount) {
@@ -66,4 +90,43 @@ public abstract class PubSubConfig extends GlobalConfig{
         return id;
     }
 
+    public boolean isTransactional() {
+        return isTransactional;
+    }
+
+
+    public String getFailoverParams() {
+        return failoverParams;
+    }
+
+    public void setFailoverParams(String failoverParams) {
+        this.failoverParams = failoverParams;
+    }
+
+    public void setTransactional(boolean isTransactional) {
+        this.isTransactional = isTransactional;
+    }
+
+    public int getTransactionBatchSize() {
+        return transactionBatchSize;
+    }
+
+    public void setTransactionBatchSize(int transactionBatchSize) {
+        this.transactionBatchSize = transactionBatchSize;
+    }
+
+    public String getTCPConnectionURL() {
+        // amqp://{username}:{password}@carbon/carbon?brokerlist='tcp://{hostname}:{port}'
+        StringBuilder builder = new StringBuilder();
+        builder.append("amqp://").append(getUsername()).append(":").append(getPassword()).append("@").
+                append(getClientID()).append("/").append(getVirtualHostName()).append("?");
+
+        if(StringUtils.isEmpty(getFailoverParams())) {
+            builder.append("brokerlist='tcp://").append(getHostname()).append(":").append(getPort()).append("'");
+        } else {
+            builder.append(getFailoverParams());
+        }
+
+        return builder.toString();
+    }
 }
