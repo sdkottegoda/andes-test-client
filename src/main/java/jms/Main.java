@@ -85,7 +85,7 @@ public class Main {
         if (cmd.hasOption("c")) {
             CONFIG_FILE_PATH = cmd.getOptionValue("c");
         } else {
-            CONFIG_FILE_PATH = System.getProperty("user.dir") + "/conf/client.yaml";
+            CONFIG_FILE_PATH = System.getProperty("user.dir") + "/src/main/resources/client.yaml";
         }
 
         TestConfiguration config = ConfigReader.parseConfig(CONFIG_FILE_PATH);

@@ -23,9 +23,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.TextMessage;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -89,7 +87,7 @@ public class PublisherThread implements Runnable {
                 jmsPublisher.send(message);
 
                 if (log.isTraceEnabled()) {
-                    log.trace("message published: " + message);
+                    log.info("message published: " + message);
                 }
                 sentCount.incrementAndGet();
                 publishRate.mark();
@@ -126,9 +124,6 @@ public class PublisherThread implements Runnable {
                 if (log.isTraceEnabled()) {
                     log.trace("message enqueued for transaction: " + message);
                 }
-
-                //logs the messages that are enqueued
-                log.debug(((TextMessage)message).getText());
 
                 if ((currentBatch.size() == batchSize) || (i == messageCount)) {
 

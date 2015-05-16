@@ -58,11 +58,13 @@ public class TestTopicPublisher implements SimpleJMSPublisher {
     public void init(PublisherConfig conf) throws NamingException, JMSException {
 
         this.conf = conf;
+        String topicName = conf.getQueueName();
         String tcpConnectionURL = conf.getTCPConnectionURL();
         Properties properties = new Properties();
         properties.put(Context.INITIAL_CONTEXT_FACTORY, conf.getInitialContextFactory());
         properties.put(conf.getConnectionFactoryPrefix() + "." + conf.getConnectionFactoryName(),
                 tcpConnectionURL);
+        properties.put("topic." + topicName, topicName);
         System.out.println("getTCPConnectionURL(userName,password) = " + tcpConnectionURL);
         InitialContext ctx = new InitialContext(properties);
         // Lookup connection factory
@@ -75,7 +77,8 @@ public class TestTopicPublisher implements SimpleJMSPublisher {
             topicSession = topicConnection.createTopicSession(false, QueueSession.AUTO_ACKNOWLEDGE);
         }
 //        Queue queue = (Queue)ctx.lookup(queueName);
-        Topic topic = topicSession.createTopic(conf.getQueueName());
+        //Topic topic = topicSession.createTopic(conf.getQueueName());
+        Topic topic = (Topic) ctx.lookup(topicName);
         // create the message to send
         topicPublisher = topicSession.createPublisher(topic);
     }

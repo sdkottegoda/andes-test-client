@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.TextMessage;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -92,6 +93,9 @@ public class ConsumerThread implements Runnable {
                 if(log.isTraceEnabled()) {
                     log.trace("message received: " + message);
                 }
+
+                //logs the messages that are received
+                log.debug(((TextMessage)message).getText());
             }
 
             log.info("Stopping consumer. [ Consumer ID: " + consumerID + "  ]");
